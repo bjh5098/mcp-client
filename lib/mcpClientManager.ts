@@ -1,7 +1,8 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type { ClientTransport } from '@modelcontextprotocol/sdk/client/types.js';
+// ClientTransport 타입은 직접 정의 (SDK 타입 경로 문제 해결)
+type ClientTransport = StdioClientTransport | StreamableHTTPClientTransport;
 import type {
   MCPServerConfig,
   TransportType,
@@ -100,11 +101,9 @@ class MCPServerConnection {
         if (!config.http) {
           throw new Error('HTTP config is required for streamable-http transport');
         }
+        // StreamableHTTPClientTransport는 URL만 받음 (헤더는 연결 후 별도 처리 필요)
         return new StreamableHTTPClientTransport(
-          new URL(config.http.url),
-          {
-            headers: config.http.headers,
-          }
+          new URL(config.http.url)
         );
 
       case 'sse':
@@ -117,10 +116,7 @@ class MCPServerConnection {
         // SSE는 StreamableHTTP와 유사하게 처리
         // 실제로는 StreamableHTTP 클라이언트가 SSE를 지원할 수 있음
         return new StreamableHTTPClientTransport(
-          new URL(config.sse.url),
-          {
-            headers: config.sse.headers,
-          }
+          new URL(config.sse.url)
         );
 
       default:

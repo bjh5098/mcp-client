@@ -113,20 +113,26 @@ export async function POST(request: NextRequest) {
       // 함수 호출 정보 수집
       if (chunk.functionCalls) {
         for (const funcCall of chunk.functionCalls) {
-          functionCalls.push({
-            name: funcCall.name,
-            arguments: funcCall.args || {},
-          });
+          if (funcCall.name) {
+            functionCalls.push({
+              name: funcCall.name,
+              arguments: funcCall.args || {},
+            });
+          }
         }
       }
 
-      // 함수 호출 결과 수집
-      if (chunk.functionResponses) {
-        for (const funcResponse of chunk.functionResponses) {
-          functionCallResults.push({
-            name: funcResponse.name,
-            result: funcResponse.response,
-          });
+      // 함수 호출 결과 수집 (Google GenAI SDK에서는 스트리밍 응답에 functionResponses가 없을 수 있음)
+      // 함수 호출 결과는 실제 함수 실행 후 별도로 처리해야 할 수 있음
+      if ('functionResponses' in chunk && chunk.functionResponses) {
+        const responses = chunk.functionResponses as any[];
+        for (const funcResponse of responses) {
+          if (funcResponse?.name) {
+            functionCallResults.push({
+              name: funcResponse.name,
+              result: funcResponse.response,
+            });
+          }
         }
       }
     }
